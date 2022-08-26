@@ -1,7 +1,9 @@
 ---
 - name: Set up the Nodesource RPM directory.
   set_fact:
-    nodejs_rhel_rpm_dir: "pub_{{ nodejs_version }}"
+    nodejs_nodesource_http_baseurl: "http://rpm.nodesource.com/pub_{{ nodejs_version }}/el/{{ ansible_distribution_major_version }}/{{ ansible_architecture }}"
+    nodejs_nodesource_https_baseurl: "https://rpm.nodesource.com/pub_{{ nodejs_version }}/el/{{ ansible_distribution_major_version }}/{{ ansible_architecture }}"
+    nodejs_nodesource_release_file: "nodesource-release-el{{ ansible_distribution_major_version }}-1.noarch.rpm"
 
 - name: Import Nodesource RPM key (CentOS < 7).
   rpm_key:
@@ -17,15 +19,23 @@
 
 - name: Add Nodesource repositories for Node.js (CentOS < 7).
   yum:
-    name: "http://rpm.nodesource.com/{{ nodejs_rhel_rpm_dir }}/el/{{ ansible_distribution_major_version }}/{{ ansible_architecture }}/nodesource-release-el{{ ansible_distribution_major_version }}-1.noarch.rpm"
+    name: "{{ nodejs_nodesource_custom_baseurl | default(nodejs_nodesource_http_baseurl) }}/{{ nodejs_nodesource_release_file }}"
     state: present
   when: ansible_distribution_major_version|int < 7
 
 - name: Add Nodesource repositories for Node.js (CentOS 7+).
   yum:
-    name: "https://rpm.nodesource.com/{{ nodejs_rhel_rpm_dir }}/el/{{ ansible_distribution_major_version }}/{{ ansible_architecture }}/nodesource-release-el{{ ansible_distribution_major_version }}-1.noarch.rpm"
+    name: "{{ nodejs_nodesource_custom_baseurl | default(nodejs_nodesource_https_baseurl) }}/{{ nodejs_nodesource_release_file }}"
     state: present
   when: ansible_distribution_major_version|int >= 7
+
+- name: Update urls in repo file for custom urls
+  ini_file:
+    path: "/etc/yum.repos.d/nodesource-el{{ ansible_distribution_major_version }}.repo"
+    section: "nodesource"
+    option: "baseurl"
+    value: "{{ nodejs_nodesource_custom_baseurl }}"
+  when: nodejs_nodesource_custom_baseurl is defined
 
 - name: Ensure Node.js AppStream module is disabled (CentOS 8+).
   command: yum module disable -y nodejs

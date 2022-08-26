@@ -3,6 +3,10 @@
 # Version numbers from Nodesource: https://github.com/nodesource/distributions
 nodejs_version: "14.x"
 
+# Custom baseurl for nodesource repo, e.g. when using a mirror
+# Defaults to using the official nodesource URLs
+# nodejs_nodesource_custom_baseurl: http://example.com/nodesource/rpms/<version>
+
 # The user for whom the npm packages will be installed.
 # nodejs_install_npm_user: username
 
